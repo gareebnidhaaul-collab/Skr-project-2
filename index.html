@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#122541">
+  <title>SKR Project Management</title>
+  <style>
+    :root {
+      --navy: #122541;
+      --navy-2: #1c3b63;
+      --blue: #2f65a7;
+      --blue-soft: #eaf2ff;
+      --teal: #087d72;
+      --teal-soft: #e5f7f3;
+      --ink: #1a2b42;
+      --muted: #6a7b91;
+      --line: #a6b6c9;
+      --border: #dbe4ee;
+      --surface: #ffffff;
+      --page: #f3f6fb;
+      --shadow: 0 12px 32px rgba(18, 37, 65, .09);
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--page);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* Passcode screen */
+    .gate {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        radial-gradient(ellipse at top right, rgba(47,101,167,.32), transparent 42%),
+        linear-gradient(145deg, #0e1d34, #18375d 70%, #10223b);
+    }
+    .gate-card {
+      width: min(420px, 100%);
+      padding: 34px 28px 28px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 22px;
+      background: rgba(255,255,255,.98);
+      text-align: center;
+      box-shadow: 0 24px 75px rgba(0,0,0,.28);
+    }
+    .brand-mark {
+      width: 62px;
+      height: 62px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+      border-radius: 18px;
+      background: var(--navy);
+      color: white;
+      font-size: 22px;
+      font-weight: 850;
+      letter-spacing: -.04em;
+    }
+    .gate h1 { margin: 0; color: var(--navy); font-size: 1.55rem; letter-spacing: -.035em; }
+    .gate p { margin: 9px 0 24px; color: var(--muted); font-size: .95rem; }
+    .passcode {
+      width: 100%;
+      height: 56px;
+      border: 1.5px solid #cbd7e5;
+      border-radius: 12px;
+      background: #f8fafd;
+      text-align: center;
+      letter-spacing: .55em;
+      padding-left: .55em;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--navy);
+      outline: none;
+    }
+    .passcode:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(47,101,167,.13); }
+    .enter-btn {
+      margin-top: 14px;
+      width: 100%;
+      min-height: 50px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 750;
+      transition: background .15s ease, transform .15s ease;
+    }
+    .enter-btn:hover { background: var(--navy-2); }
+    .enter-btn:active { transform: translateY(1px); }
+    .gate-error { min-height: 22px; margin: 10px 0 0 !important; color: #b4232b !important; font-size: .88rem !important; }
+
+    /* Main application */
+    .app-header {
+      color: #fff;
+      background: linear-gradient(112deg, var(--navy), #214a78);
+      padding: 26px 22px 30px;
+      box-shadow: 0 5px 18px rgba(18,37,65,.14);
+    }
+    .header-inner { width: min(1320px, 100%); margin: 0 auto; }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .small-mark {
+      flex: 0 0 auto; width: 45px; height: 45px; display: grid; place-items: center;
+      background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.21);
+      border-radius: 13px; font-weight: 850; font-size: 17px;
+    }
+    .app-header h1 { margin: 0; font-size: clamp(1.35rem, 2.7vw, 2rem); letter-spacing: -.04em; }
+    .app-subtitle { margin: 7px 0 0; color: #d5e2f2; font-size: .95rem; }
+    .lock-btn {
+      flex: 0 0 auto; border: 1px solid rgba(255,255,255,.25); color: #fff;
+      background: rgba(255,255,255,.10); padding: 9px 13px; border-radius: 10px; font-weight: 700;
+    }
+    .lock-btn:hover { background: rgba(255,255,255,.18); }
+    .content { width: min(1320px, 100%); margin: 0 auto; padding: 27px 22px 44px; }
+    .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; margin-bottom: 18px; }
+    .section-heading h2 { margin: 0; color: var(--navy); font-size: 1.18rem; }
+    .section-heading p { margin: 5px 0 0; color: var(--muted); font-size: .9rem; }
+    .count-pill { border-radius: 999px; background: #e5edf8; color: var(--navy); padding: 7px 11px; font-weight: 750; font-size: .82rem; white-space: nowrap; }
+    .tree { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+    .group { min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
+    .branch-cap { display: flex; justify-content: center; align-items: center; height: 24px; }
+    .branch-cap span { display: block; width: 2px; height: 100%; background: var(--line); }
+    .account-card {
+      min-width: 0; overflow: hidden; border-radius: 16px; background: var(--surface);
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+    }
+    .account-top { padding: 16px 17px 15px; background: var(--blue-soft); border-bottom: 1px solid #d6e5fa; border-top: 4px solid var(--blue); }
+    .secondary .account-top { background: var(--teal-soft); border-bottom-color: #ccebe5; border-top-color: var(--teal); }
+    .account-role {
+      display: inline-flex; align-items: center; gap: 7px; margin-bottom: 11px;
+      color: var(--blue); font-size: .73rem; font-weight: 850; letter-spacing: .075em; text-transform: uppercase;
+    }
+    .secondary .account-role { color: var(--teal); }
+    .role-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .email { margin: 0; color: var(--navy); font-size: clamp(.91rem, 1.2vw, 1.02rem); line-height: 1.4; font-weight: 800; overflow-wrap: anywhere; }
+    .account-actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 13px 15px 15px; }
+    .btn {
+      display: inline-flex; justify-content: center; align-items: center; gap: 7px;
+      min-height: 40px; border: 0; border-radius: 9px; padding: 9px 12px;
+      font-size: .86rem; font-weight: 750; transition: filter .12s ease, transform .12s ease;
+    }
+    .btn:hover { filter: brightness(.96); }
+    .btn:active { transform: translateY(1px); }
+    .btn-copy { color: #fff; background: var(--navy); }
+    .btn-credentials { color: #fff; background: var(--teal); }
+    .child-connector { height: 29px; width: 2px; margin: 0 auto; background: var(--line); }
+.group .account-card.primary { position: relative; }
+.group .account-card.secondary { border-color: #a8ddd4; }
+.group .no-secondary { margin-top: 20px; }
+    .no-secondary {
+      margin-top: 29px; padding: 19px 15px; text-align: center; color: var(--muted);
+      background: rgba(255,255,255,.65); border: 1px dashed #bac8d8; border-radius: 13px;
+      font-size: .88rem;
+    }
+    .no-secondary strong { display: block; color: #52667e; margin-bottom: 3px; }
+    .footer { text-align: center; color: var(--muted); font-size: .82rem; padding: 0 18px 26px; }
+
+    /* Credential pop-up */
+    .modal-layer {
+      display: none; position: fixed; inset: 0; z-index: 20; padding: 18px;
+      background: rgba(9, 22, 40, .68); align-items: center; justify-content: center;
+    }
+    .modal-layer.open { display: flex; }
+    .modal {
+      width: min(520px, 100%); max-height: min(90vh, 760px); overflow: auto;
+      border-radius: 18px; background: #fff; box-shadow: 0 25px 85px rgba(0,0,0,.3); padding: 23px;
+    }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 7px; }
+    .modal h2 { margin: 0; color: var(--navy); font-size: 1.23rem; line-height: 1.35; overflow-wrap: anywhere; }
+    .modal-sub { margin: 6px 0 17px; color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+    .close-btn { border: 0; background: #edf2f7; color: var(--ink); border-radius: 9px; padding: 8px 11px; font-weight: 750; flex: 0 0 auto; }
+    .secret-row { padding: 13px; border: 1px solid var(--border); border-radius: 12px; margin-top: 11px; }
+    .secret-label { margin: 0 0 9px; color: #5d7087; font-size: .78rem; font-weight: 850; letter-spacing: .045em; text-transform: uppercase; }
+    .secret-actions { display: flex; align-items: center; gap: 9px; }
+    .secret-value { flex: 1; min-width: 0; color: var(--navy); background: #f4f7fb; border: 1px solid #e3eaf2; border-radius: 8px; padding: 10px 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+    .copy-secret { background: var(--navy); color: #fff; flex: 0 0 auto; }
+    .toast {
+      position: fixed; z-index: 50; bottom: 22px; left: 50%; transform: translateX(-50%);
+      max-width: calc(100vw - 30px); text-align: center; border-radius: 10px; padding: 11px 16px;
+      color: #fff; background: #102541; box-shadow: 0 8px 25px rgba(0,0,0,.2); display: none; font-size: .9rem;
+    }
+    .toast.show { display: block; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #efbd4d; outline-offset: 2px; }
+    @media (max-width: 900px) {
+      .tree { grid-template-columns: 1fr; gap: 22px; }
+      .group { width: min(620px, 100%); margin: 0 auto; padding: 18px; }
+      .branch-cap { display: none; }
+      .email { font-size: 1rem; }
+      .no-secondary { margin-top: 18px; }
+      .child-connector { height: 21px; }
+    }
+    @media (max-width: 520px) {
+      .app-header { padding: 20px 15px 23px; }
+      .content { padding: 22px 14px 35px; }
+      .small-mark { width: 40px; height: 40px; border-radius: 11px; }
+      .topline { align-items: flex-start; }
+      .lock-btn { padding: 8px 10px; font-size: .84rem; }
+      .section-heading { align-items: flex-start; }
+      .count-pill { font-size: .75rem; }
+      .account-actions { flex-direction: column; }
+      .account-actions .btn { width: 100%; }
+      .gate-card { padding: 29px 21px 23px; }
+      .modal { padding: 18px; }
+      .secret-actions { flex-direction: column; align-items: stretch; }
+      .copy-secret { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <section class="gate" id="gateScreen" aria-label="Passcode entry">
+    <form class="gate-card" id="gateForm" autocomplete="off">
+      <div class="brand-mark" aria-hidden="true">SKR</div>
+      <h1>SKR Project Management</h1>
+      <p>Enter your 6-digit passcode to continue</p>
+      <input class="passcode" id="passcodeInput" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" autocomplete="one-time-code" aria-label="6-digit passcode" placeholder="••••••" required>
+      <button class="enter-btn" type="submit">Unlock dashboard</button>
+      <p class="gate-error" id="gateError" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <div id="mainApp" class="hidden">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="topline">
+          <div class="brand">
+            <div class="small-mark" aria-hidden="true">SKR</div>
+            <div>
+              <h1>SKR Project Management</h1>
+              <p class="app-subtitle">Gmail Account Hierarchy</p>
+            </div>
+          </div>
+          <button class="lock-btn" id="lockButton" type="button">Lock dashboard</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="section-heading">
+        <div>
+          <h2>Account Structure</h2>
+          <p>Three separate account groups</p>
+        </div>
+        <span class="count-pill">3 primary · 2 secondary</span>
+      </div>
+
+      <section class="tree" aria-label="Account hierarchy">
+        <!-- Group 1: primary shanazfx2026 -> secondary Minhajmhd408 -->
+        <article class="group">
+          <div class="branch-cap" aria-hidden="true"><span></span></div>
+          <div class="account-card primary">
+            <div class="account-top">
+              <div class="account-role"><span class="role-dot"></span>Primary account (1)</div>
+              <p class="email">shanazfx2026@gmail.com</p>
+            </div>
+            <div class="account-actions">
+              <button class="btn btn-copy" type="button" data-copy="shanazfx2026@gmail.com">Copy email</button>
+            </div>
+          </div>
+          <div class="child-connector" aria-hidden="true"></div>
+          <div class="account-card secondary">
+            <div class="account-top">
+              <div class="account-role"><span class="role-dot"></span>Secondary account</div>
+              <p class="email">Minhajmhd408@gmail.com</p>
+            </div>
+            <div class="account-actions">
+              <button class="btn btn-copy" type="button" data-copy="Minhajmhd408@gmail.com">Copy email</button>
+              <button class="btn btn-credentials" type="button" data-account="Minhajmhd408@gmail.com">View credentials</button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Group 2: primary shafathima90, no secondary listed -->
+        <article class="group">
+          <div class="branch-cap" aria-hidden="true"><span></span></div>
+          <div class="account-card primary">
+            <div class="account-top">
+              <div class="account-role"><span class="role-dot"></span>Primary account (2)</div>
+              <p class="email">shafathima90@gmail.com</p>
+            </div>
+            <div class="account-actions">
+              <button class="btn btn-copy" type="button" data-copy="shafathima90@gmail.com">Copy email</button>
+            </div>
+          </div>
+          <div class="no-secondary"><strong>Primary account only</strong>No secondary account listed</div>
+        </article>
+
+        <!-- Group 3: primary shafx2026 -> secondary Zakkyahamed14 -->
+        <article class="group">
+          <div class="branch-cap" aria-hidden="true"><span></span></div>
+          <div class="account-card primary">
+            <div class="account-top">
+              <div class="account-role"><span class="role-dot"></span>Primary account (3)</div>
+              <p class="email">shafx2026@gmail.com</p>
+            </div>
+            <div class="account-actions">
+              <button class="btn btn-copy" type="button" data-copy="shafx2026@gmail.com">Copy email</button>
+            </div>
+          </div>
+          <div class="child-connector" aria-hidden="true"></div>
+          <div class="account-card secondary">
+            <div class="account-top">
+              <div class="account-role"><span class="role-dot"></span>Secondary account</div>
+              <p class="email">Zakkyahamed14@gmail.com</p>
+            </div>
+            <div class="account-actions">
+              <button class="btn btn-copy" type="button" data-copy="Zakkyahamed14@gmail.com">Copy email</button>
+              <button class="btn btn-credentials" type="button" data-account="Zakkyahamed14@gmail.com">View credentials</button>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+    <footer class="footer">SKR Project Management</footer>
+  </div>
+
+  <div class="modal-layer" id="credentialModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <section class="modal">
+      <div class="modal-head">
+        <h2 id="modalTitle">Secondary account credentials</h2>
+        <button class="close-btn" id="closeModal" type="button">Close</button>
+      </div>
+      <p class="modal-sub" id="modalAccount"></p>
+      <div class="secret-row">
+        <p class="secret-label">Gm Password</p>
+        <div class="secret-actions">
+          <div class="secret-value" id="gmPasswordValue"></div>
+          <button class="btn copy-secret" type="button" data-secret="gm">Copy password</button>
+        </div>
+      </div>
+      <div class="secret-row">
+        <p class="secret-label">Capital Password</p>
+        <div class="secret-actions">
+          <div class="secret-value" id="capitalPasswordValue"></div>
+          <button class="btn copy-secret" type="button" data-secret="capital">Copy password</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Passcode gate for the requested static HTML interface.
+    const ACCESS_PASSCODE = '200705';
+
+    // These shared secondary-account credentials are only displayed inside the popup.
+    const CREDENTIALS = {
+      gm: 'SkrTrd@26)',
+      capital: 'Trdsldo@987?'
+    };
+
+    const gateScreen = document.getElementById('gateScreen');
+    const mainApp = document.getElementById('mainApp');
+    const gateForm = document.getElementById('gateForm');
+    const passcodeInput = document.getElementById('passcodeInput');
+    const gateError = document.getElementById('gateError');
+    const credentialModal = document.getElementById('credentialModal');
+    const toast = document.getElementById('toast');
+    let toastTimer = null;
+
+    gateForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (passcodeInput.value === ACCESS_PASSCODE) {
+        gateError.textContent = '';
+        gateScreen.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+        passcodeInput.value = '';
+      } else {
+        gateError.textContent = 'Incorrect passcode. Please try again.';
+        passcodeInput.value = '';
+        passcodeInput.focus();
+      }
+    });
+
+    document.getElementById('lockButton').addEventListener('click', lockDashboard);
+    function lockDashboard() {
+      closeCredentialModal();
+      mainApp.classList.add('hidden');
+      gateScreen.classList.remove('hidden');
+      passcodeInput.value = '';
+      gateError.textContent = '';
+      passcodeInput.focus();
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    async function copyText(value, label) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          const helper = document.createElement('textarea');
+          helper.value = value;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.left = '-9999px';
+          document.body.appendChild(helper);
+          helper.select();
+          const success = document.execCommand('copy');
+          helper.remove();
+          if (!success) throw new Error('Clipboard unavailable');
+        }
+        showToast(label + ' copied');
+      } catch (error) {
+        showToast('Copy unavailable in this browser. Please select and copy manually.');
+      }
+    }
+
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+      button.addEventListener('click', () => copyText(button.dataset.copy, 'Email'));
+    });
+
+    document.querySelectorAll('[data-account]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.getElementById('modalAccount').textContent = button.dataset.account;
+        document.getElementById('gmPasswordValue').textContent = CREDENTIALS.gm;
+        document.getElementById('capitalPasswordValue').textContent = CREDENTIALS.capital;
+        credentialModal.classList.add('open');
+        document.getElementById('closeModal').focus();
+      });
+    });
+
+    document.querySelectorAll('[data-secret]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const kind = button.dataset.secret;
+        const label = kind === 'gm' ? 'Gm Password' : 'Capital Password';
+        copyText(CREDENTIALS[kind], label);
+      });
+    });
+
+    function closeCredentialModal() {
+      credentialModal.classList.remove('open');
+      document.getElementById('gmPasswordValue').textContent = '';
+      document.getElementById('capitalPasswordValue').textContent = '';
+    }
+    document.getElementById('closeModal').addEventListener('click', closeCredentialModal);
+    credentialModal.addEventListener('click', (event) => {
+      if (event.target === credentialModal) closeCredentialModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeCredentialModal();
+    });
+    window.addEventListener('load', () => passcodeInput.focus({ preventScroll: true }));
+  </script>
+</body>
+</html>
